@@ -1,0 +1,16 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="/src/index.css">
+</head>
+<body>
+  <ul>
+    <%dirs.map(item => {%>
+      <li><a href="<%=item.url%>"><%=item.filename%></a> <span><%=item.info.isFile ? '文件' : '文件夹'%></span> 文件大小: <%=item.info.size%> 最后修改时间: <%=item.info.lastModified%></li>
+    <%})%>
+  </ul>
+</body>
+</html>
