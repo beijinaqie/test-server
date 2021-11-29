@@ -9,8 +9,10 @@ const ejs = require('ejs')
 
 class Server {
   constructor(options) {
+    console.log(options);
     this.port = options.port
-    this.directory = path.resolve(__dirname, options.directory == 'process.cwd()' ? eval(options.directory) : options.directory)
+    this.showHideFile = options.showHideFile
+    this.directory = path.resolve(process.cwd(), options.directory)
     this.init()
   }
 
@@ -24,7 +26,7 @@ class Server {
     const content = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf-8')
     let dirs = fs.readdirSync(directory)
     dirs = dirs.map(item => {
-      return {
+      return (!item.startsWith('.') || this.showHideFile) && {
         url: path.join(req.url, item),
         filename: item
       }
@@ -36,8 +38,8 @@ class Server {
     const server = http.createServer((req, res) => {
       // ora.start()
       if (req.url == '/favicon.ico') return
-      let directory = path.join(this.directory, req.url)
-      console.log(directory);
+      let directory = path.join(this.directory, req.url == '/' ? '' : req.url)
+      // console.log(directory);
       if (!fs.existsSync(directory)) {
         res.end('Not Found')
       } else if (fs.statSync(directory).isFile()) {
