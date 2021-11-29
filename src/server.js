@@ -8,6 +8,8 @@ const ejs = require('ejs')
 // const ora = require('ora')
 const mime = require('mime')
 const figlet = require('figlet')
+const crypto = require('crypto')
+
 class Server {
   constructor(options) {
     this.port = options.port
@@ -19,7 +21,30 @@ class Server {
   init() {
     this.createServer()
   }
+  catch(req, res, directory) {
+    let statObj = fs.statSync(directory)
+
+    res.setHeader('Expires', new Date(Date.now() + 10 * 1000).toGMTString())
+    // 强制缓存
+    res.setHeader('Cache-Control', 'max-age=0')
+    // 协商缓存
+    let lastModified = statObj.ctime.toGMTString()
+    let etag = crypto.createHash('md5').update(lastModified + statObj.size).digest('base64')
+    console.log(etag);
+    // res.setHeader('Last-Modified', lastModified)
+    // let ifModifiedSince = req.headers['if-modified-since']
+    let ifNoneMatch = req.headers['if-none-match']
+    res.setHeader('Etag', etag)
+    // if (lastModified === ifModifiedSince) return true
+    if (ifNoneMatch === etag) return true
+
+    return false
+  }
   sendFile(req, res, directory) {
+    if (this.catch(req, res, directory)) {
+      res.statusCode = 304;
+      return res.end()
+    }
     res.setHeader('Content-Type', mime.getType(directory) + ';charset=utf-8')
     createReadStream(directory).pipe(res)
   }
@@ -51,6 +76,7 @@ class Server {
 
       if (req.url == '/favicon.ico') return
 
+      console.log(directory);
       if (!fs.existsSync(directory)) {
         res.end('Not Found')
       } else if (fs.statSync(directory).isFile()) {
